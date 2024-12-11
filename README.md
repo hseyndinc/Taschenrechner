@@ -1,5 +1,6 @@
 # Taschenrechner
 C++ Taschenrechner 
+
 # Fortgeschrittener Taschenrechner
 
 Ein C++ Projekt, das einen fortgeschrittenen Taschenrechner implementiert. Der Rechner unterstützt sowohl grundlegende arithmetische Operationen als auch wissenschaftliche Berechnungen und komplexe Zahlen.
@@ -39,5 +40,4 @@ double result = calc.add(2, 2);  // Gibt 4 zurück
 MIT License
 
 ## Autor
-
-[Ihr Name]
+Hüseyin Dinc
