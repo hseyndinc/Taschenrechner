@@ -170,7 +170,7 @@
     </item>
     <item>
      <layout class="QHBoxLayout" name="buttonLayout">
-      <!-- Theme button will be added here programmatically -->
+      <!-- Theme button will be added here programmatically. -->
      </layout>
     </item>
    </layout>

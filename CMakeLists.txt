@@ -6,7 +6,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# Qt6 Pfad
+# Qt6 Pfad.
 set(CMAKE_PREFIX_PATH "/Users/hseyndinc/Qt/6.7.3/macos")
 
 find_package(Qt6 COMPONENTS Widgets REQUIRED)

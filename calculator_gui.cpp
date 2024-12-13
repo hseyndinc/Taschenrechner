@@ -1,5 +1,5 @@
 //
-// Created by Hseyn Dinc on 13.12.24.
+// Created by Hseyn Dinc on 13.12.24..
 //
 
 #include "calculator_gui.h"
