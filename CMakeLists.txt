@@ -1,12 +1,21 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
+project(futuristic_calculator)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
-project(Taschenrechner)
+# Qt6 Pfad
+set(CMAKE_PREFIX_PATH "/Users/hseyndinc/Qt/6.7.3/macos")
 
-include_directories(include)
+find_package(Qt6 COMPONENTS Widgets REQUIRED)
 
-set(SOURCES
-        src/main.cpp
-        src/Calculator.cpp
+add_executable(calculator_gui
+        main.cpp
+        calculator_gui.cpp
+        calculator_gui.h
+        calculator_gui.ui
 )
 
-add_executable(Taschenrechner ${SOURCES})
+target_link_libraries(calculator_gui PRIVATE Qt6::Widgets)
