@@ -1,7 +1,6 @@
 //
-// Created by Hseyn Dinc on 13.12.24..
+// Created by Hseyn Dinc on 16.12.24..
 //
-
 #include "calculator_gui.h"
 #include "./ui_calculator_gui.h"
 #include <QStyle>
@@ -13,25 +12,45 @@ CalculatorGUI::CalculatorGUI(QWidget *parent)
 {
     ui->setupUi(this);
 
+    // Button-Typen setzen
+    for (int i = 0; i <= 9; ++i) {
+        QString buttonName = "button" + QString::number(i);
+        if (QPushButton* button = findChild<QPushButton*>(buttonName)) {
+            button->setProperty("type", "number");
+        }
+    }
+
+    QVector<QString> operators = {"Add", "Subtract", "Multiply", "Divide"};
+    for (const QString& op : operators) {
+        QString buttonName = "button" + op;
+        if (QPushButton* button = findChild<QPushButton*>(buttonName)) {
+            button->setProperty("type", "operator");
+        }
+    }
+
+    QVector<QString> functions = {"Sin", "Sqrt", "Power"};
+    for (const QString& func : functions) {
+        QString buttonName = "button" + func;
+        if (QPushButton* button = findChild<QPushButton*>(buttonName)) {
+            button->setProperty("type", "function");
+        }
+    }
+
     // Verbinde numerische Buttons
-    for (int i = 0; i <= 9; ++i)
-    {
+    for (int i = 0; i <= 9; ++i) {
         QString buttonName = "button" + QString::number(i);
         QPushButton *button = findChild<QPushButton *>(buttonName);
-        if (button)
-        {
+        if (button) {
             connect(button, &QPushButton::clicked, this, &CalculatorGUI::numberPressed);
         }
     }
 
     // Verbinde Operatorbuttons
-    QVector<QString> operators = {"Add", "Subtract", "Multiply", "Divide"};
-    for (const QString &op : operators)
-    {
+    QVector<QString> operatorButtons = {"Add", "Subtract", "Multiply", "Divide"};
+    for (const QString &op : operatorButtons) {
         QString buttonName = "button" + op;
         QPushButton *button = findChild<QPushButton *>(buttonName);
-        if (button)
-        {
+        if (button) {
             connect(button, &QPushButton::clicked, this, &CalculatorGUI::operatorPressed);
         }
     }
@@ -58,14 +77,10 @@ CalculatorGUI::~CalculatorGUI()
 void CalculatorGUI::numberPressed()
 {
     QPushButton *button = qobject_cast<QPushButton *>(sender());
-    if (button)
-    {
-        if (currentNumber == "0")
-        {
+    if (button) {
+        if (currentNumber == "0") {
             currentNumber = button->text();
-        }
-        else
-        {
+        } else {
             currentNumber += button->text();
         }
         updateDisplay();
@@ -75,8 +90,7 @@ void CalculatorGUI::numberPressed()
 void CalculatorGUI::operatorPressed()
 {
     QPushButton *button = qobject_cast<QPushButton *>(sender());
-    if (button)
-    {
+    if (button) {
         storedNumber = currentNumber.toDouble();
         pendingOperator = button->text();
         currentNumber = "";
@@ -89,26 +103,16 @@ void CalculatorGUI::equalPressed()
     double result = 0;
     double currentNum = currentNumber.toDouble();
 
-    if (pendingOperator == "+")
-    {
+    if (pendingOperator == "+") {
         result = storedNumber + currentNum;
-    }
-    else if (pendingOperator == "-")
-    {
+    } else if (pendingOperator == "-") {
         result = storedNumber - currentNum;
-    }
-    else if (pendingOperator == "*")
-    {
+    } else if (pendingOperator == "*") {
         result = storedNumber * currentNum;
-    }
-    else if (pendingOperator == "/")
-    {
-        if (currentNum != 0)
-        {
+    } else if (pendingOperator == "/") {
+        if (currentNum != 0) {
             result = storedNumber / currentNum;
-        }
-        else
-        {
+        } else {
             ui->display->setText("Error");
             return;
         }
@@ -130,28 +134,19 @@ void CalculatorGUI::clearPressed()
 void CalculatorGUI::scientificPressed()
 {
     QPushButton *button = qobject_cast<QPushButton *>(sender());
-    if (!button)
-        return;
+    if (!button) return;
 
     double num = currentNumber.toDouble();
-    if (button->text() == "√")
-    {
-        if (num >= 0)
-        {
+    if (button->text() == "√") {
+        if (num >= 0) {
             currentNumber = QString::number(std::sqrt(num));
-        }
-        else
-        {
+        } else {
             ui->display->setText("Error");
             return;
         }
-    }
-    else if (button->text() == "sin")
-    {
+    } else if (button->text() == "sin") {
         currentNumber = QString::number(std::sin(num));
-    }
-    else if (button->text() == "^")
-    {
+    } else if (button->text() == "^") {
         storedNumber = num;
         pendingOperator = "^";
         currentNumber = "";
@@ -163,8 +158,7 @@ void CalculatorGUI::scientificPressed()
 
 void CalculatorGUI::decimalPressed()
 {
-    if (!currentNumber.contains('.'))
-    {
+    if (!currentNumber.contains('.')) {
         currentNumber += '.';
         updateDisplay();
     }
@@ -173,24 +167,16 @@ void CalculatorGUI::decimalPressed()
 void CalculatorGUI::memoryPressed()
 {
     QPushButton *button = qobject_cast<QPushButton *>(sender());
-    if (!button)
-        return;
+    if (!button) return;
 
-    if (button->text() == "M+")
-    {
+    if (button->text() == "M+") {
         memory += currentNumber.toDouble();
-    }
-    else if (button->text() == "M-")
-    {
+    } else if (button->text() == "M-") {
         memory -= currentNumber.toDouble();
-    }
-    else if (button->text() == "MR")
-    {
+    } else if (button->text() == "MR") {
         currentNumber = QString::number(memory);
         updateDisplay();
-    }
-    else if (button->text() == "MC")
-    {
+    } else if (button->text() == "MC") {
         memory = 0;
     }
 }
@@ -203,7 +189,6 @@ void CalculatorGUI::updateDisplay()
 void CalculatorGUI::addToHistory(const QString &operation)
 {
     history.append(operation);
-    // Hier könnten Sie die Historie in einem separaten Widget anzeigen
 }
 
 void CalculatorGUI::toggleTheme()
@@ -221,18 +206,80 @@ void CalculatorGUI::setupThemeButton()
 
 void CalculatorGUI::applyTheme()
 {
-    QString styleSheet;
-    if (isDarkMode)
-    {
-        styleSheet = "QMainWindow { background-color: #333333; }"
-                     "QLineEdit { background-color: #444444; color: white; }"
-                     "QPushButton { background-color: #666666; color: white; }";
-    }
-    else
-    {
-        styleSheet = "QMainWindow { background-color: #f0f0f0; }"
-                     "QLineEdit { background-color: white; color: black; }"
-                     "QPushButton { background-color: #e0e0e0; color: black; }";
-    }
-    setStyleSheet(styleSheet);
+    QString baseStyle = R"(
+        QPushButton {
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            min-width: 80px;
+            min-height: 60px;
+        }
+        QLineEdit {
+            border-radius: 10px;
+            padding: 10px;
+            margin: 5px;
+        }
+    )";
+
+    QString darkStyle = R"(
+        QMainWindow {
+            background-color: #1a1a1a;
+        }
+        QLineEdit {
+            background-color: #333333;
+            color: #ffffff;
+            border: 2px solid #444444;
+        }
+        QPushButton {
+            background-color: #333333;
+            color: #ffffff;
+            border: 2px solid #444444;
+        }
+        QPushButton:hover {
+            background-color: #444444;
+        }
+        QPushButton[type="operator"] {
+            background-color: #FF9800;
+            color: white;
+        }
+        QPushButton[type="number"] {
+            background-color: #424242;
+        }
+        QPushButton[type="function"] {
+            background-color: #2196F3;
+            color: white;
+        }
+    )";
+
+    QString lightStyle = R"(
+        QMainWindow {
+            background-color: #f5f5f5;
+        }
+        QLineEdit {
+            background-color: white;
+            color: #333333;
+            border: 2px solid #e0e0e0;
+        }
+        QPushButton {
+            background-color: white;
+            color: #333333;
+            border: 2px solid #e0e0e0;
+        }
+        QPushButton:hover {
+            background-color: #f0f0f0;
+        }
+        QPushButton[type="operator"] {
+            background-color: #2196F3;
+            color: white;
+        }
+        QPushButton[type="number"] {
+            background-color: white;
+        }
+        QPushButton[type="function"] {
+            background-color: #4CAF50;
+            color: white;
+        }
+    )";
+
+    setStyleSheet(baseStyle + (isDarkMode ? darkStyle : lightStyle));
 }

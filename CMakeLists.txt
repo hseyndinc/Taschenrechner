@@ -6,10 +6,16 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# Qt6 Pfad.
+# Qt6 Pfad
 set(CMAKE_PREFIX_PATH "/Users/hseyndinc/Qt/6.7.3/macos")
 
-find_package(Qt6 COMPONENTS Widgets REQUIRED)
+# Füge die zusätzlichen Module hinzu
+find_package(Qt6 COMPONENTS
+        Widgets
+        Multimedia
+        MultimediaWidgets
+        REQUIRED
+)
 
 add_executable(calculator_gui
         main.cpp
@@ -18,4 +24,8 @@ add_executable(calculator_gui
         calculator_gui.ui
 )
 
-target_link_libraries(calculator_gui PRIVATE Qt6::Widgets)
+target_link_libraries(calculator_gui PRIVATE
+        Qt6::Widgets
+        Qt6::Multimedia
+        Qt6::MultimediaWidgets
+)
