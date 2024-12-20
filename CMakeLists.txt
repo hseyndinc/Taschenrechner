@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(futuristic_calculator)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
@@ -9,7 +10,7 @@ set(CMAKE_AUTOUIC ON)
 # Qt6 Pfad
 set(CMAKE_PREFIX_PATH "/Users/hseyndinc/Qt/6.7.3/macos")
 
-# Füge die zusätzlichen Module hinzu
+# Finde die benötigten Qt Pakete
 find_package(Qt6 COMPONENTS
         Widgets
         Multimedia
@@ -17,6 +18,7 @@ find_package(Qt6 COMPONENTS
         REQUIRED
 )
 
+# Definiere das ausführbare Programm und seine Quelldateien
 add_executable(calculator_gui
         main.cpp
         calculator_gui.cpp
@@ -24,6 +26,7 @@ add_executable(calculator_gui
         calculator_gui.ui
 )
 
+# Verlinke die Qt-Bibliotheken
 target_link_libraries(calculator_gui PRIVATE
         Qt6::Widgets
         Qt6::Multimedia

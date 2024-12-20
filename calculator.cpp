@@ -2,199 +2,364 @@
 // Created by Hseyn Dinc on 16.12.24..
 //
 
-
-#include <iostream>
+#include "calculator_gui.h"
+#include "./ui_calculator_gui.h"
+#include <QStyle>
+#include <QPushButton>
 #include <cmath>
-#include <vector>
-#include <string>
-#include <iomanip>
+#include <QRegularExpression>
 
-class FuturisticCalculator
+CalculatorGUI::CalculatorGUI(QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::CalculatorGUI), storedNumber(0), memory(0), isDarkMode(false)
 {
-private:
-    std::vector<std::string> history;
-    double memory;
+    ui->setupUi(this);
 
-public:
-    FuturisticCalculator() : memory(0)
-    {
-        displayWelcome();
+    // Button-Typen setzen
+    for (int i = 0; i <= 9; ++i) {
+        QString buttonName = "button" + QString::number(i);
+        if (QPushButton* button = findChild<QPushButton*>(buttonName)) {
+            button->setProperty("type", "number");
+        }
     }
 
-    void displayWelcome()
-    {
-        std::cout << "\n╔════════════════════════════════════╗\n";
-        std::cout << "║     FUTURISTIC CALCULATOR v1.0     ║\n";
-        std::cout << "╚════════════════════════════════════╝\n";
+    QVector<QString> operators = {"Add", "Subtract", "Multiply", "Divide"};
+    for (const QString& op : operators) {
+        QString buttonName = "button" + op;
+        if (QPushButton* button = findChild<QPushButton*>(buttonName)) {
+            button->setProperty("type", "operator");
+        }
     }
 
-    void displayMenu()
-    {
-        std::cout << "\n┌─────────── OPERATIONS ───────────┐\n";
-        std::cout << "│ 1. Basic Operations (+-*/)\t│\n";
-        std::cout << "│ 2. Scientific Functions\t\t│\n";
-        std::cout << "│ 3. Memory Operations\t\t│\n";
-        std::cout << "│ 4. View History\t\t│\n";
-        std::cout << "│ 5. Exit\t\t\t│\n";
-        std::cout << "└──────────────────────────────────┘\n";
+    QVector<QString> functions = {"Sin", "Sqrt", "Power"};
+    for (const QString& func : functions) {
+        QString buttonName = "button" + func;
+        if (QPushButton* button = findChild<QPushButton*>(buttonName)) {
+            button->setProperty("type", "function");
+        }
     }
 
-    void basicOperations()
-    {
-        double a, b;
-        char op;
+    // Verbinde numerische Buttons
+    for (int i = 0; i <= 9; ++i) {
+        QString buttonName = "button" + QString::number(i);
+        QPushButton *button = findChild<QPushButton *>(buttonName);
+        if (button) {
+            connect(button, &QPushButton::clicked, this, &CalculatorGUI::numberPressed);
+        }
+    }
 
-        std::cout << "Enter first number: ";
-        std::cin >> a;
-        std::cout << "Enter operator (+,-,*,/): ";
-        std::cin >> op;
-        std::cout << "Enter second number: ";
-        std::cin >> b;
+    // Verbinde Operatorbuttons
+    QVector<QString> operatorButtons = {"Add", "Subtract", "Multiply", "Divide"};
+    for (const QString &op : operatorButtons) {
+        QString buttonName = "button" + op;
+        QPushButton *button = findChild<QPushButton *>(buttonName);
+        if (button) {
+            connect(button, &QPushButton::clicked, this, &CalculatorGUI::operatorPressed);
+        }
+    }
 
-        double result;
-        switch (op)
-        {
-        case '+':
-            result = a + b;
-            break;
-        case '-':
-            result = a - b;
-            break;
-        case '*':
-            result = a * b;
-            break;
-        case '/':
-            if (b != 0)
-                result = a / b;
-            else
-            {
-                std::cout << "Error: Division by zero!\n";
-                return;
-            }
-            break;
-        default:
-            std::cout << "Invalid operator!\n";
+    // Weitere Verbindungen
+    connect(ui->buttonEqual, &QPushButton::clicked, this, &CalculatorGUI::equalPressed);
+    connect(ui->buttonClear, &QPushButton::clicked, this, &CalculatorGUI::clearPressed);
+    connect(ui->buttonDecimal, &QPushButton::clicked, this, &CalculatorGUI::decimalPressed);
+
+    // Wissenschaftliche Funktionen
+    connect(ui->buttonSqrt, &QPushButton::clicked, this, &CalculatorGUI::scientificPressed);
+    connect(ui->buttonPower, &QPushButton::clicked, this, &CalculatorGUI::scientificPressed);
+    connect(ui->buttonSin, &QPushButton::clicked, this, &CalculatorGUI::scientificPressed);
+
+    setupThemeButton();
+    setupVoiceRecognition();
+    applyTheme();
+}
+
+CalculatorGUI::~CalculatorGUI()
+{
+    delete ui;
+}
+
+void CalculatorGUI::numberPressed()
+{
+    QPushButton *button = qobject_cast<QPushButton *>(sender());
+    if (button) {
+        if (currentNumber == "0") {
+            currentNumber = button->text();
+        } else {
+            currentNumber += button->text();
+        }
+        updateDisplay();
+    }
+}
+
+void CalculatorGUI::operatorPressed()
+{
+    QPushButton *button = qobject_cast<QPushButton *>(sender());
+    if (button) {
+        storedNumber = currentNumber.toDouble();
+        pendingOperator = button->text();
+        currentNumber = "";
+        addToHistory(QString::number(storedNumber) + " " + pendingOperator);
+    }
+}
+
+void CalculatorGUI::equalPressed()
+{
+    double result = 0;
+    double currentNum = currentNumber.toDouble();
+
+    if (pendingOperator == "+") {
+        result = storedNumber + currentNum;
+    } else if (pendingOperator == "-") {
+        result = storedNumber - currentNum;
+    } else if (pendingOperator == "*") {
+        result = storedNumber * currentNum;
+    } else if (pendingOperator == "/") {
+        if (currentNum != 0) {
+            result = storedNumber / currentNum;
+        } else {
+            ui->display->setText("Fehler: Division durch 0");
             return;
         }
-
-        std::string operation = std::to_string(a) + " " + op + " " +
-                                std::to_string(b) + " = " + std::to_string(result);
-        history.push_back(operation);
-
-        std::cout << "\n═══════ Result ═══════\n";
-        std::cout << result << std::endl;
     }
 
-    void scientificOperations()
-    {
-        std::cout << "\n┌────── Scientific Menu ──────┐\n";
-        std::cout << "│ 1. Square Root\t\t   │\n";
-        std::cout << "│ 2. Power\t\t   │\n";
-        std::cout << "│ 3. Sine\t\t   │\n";
-        std::cout << "│ 4. Cosine\t\t   │\n";
-        std::cout << "│ 5. Logarithm\t\t   │\n";
-        std::cout << "└──────────────────────────┘\n";
-
-        int choice;
-        double num, result;
-        std::cin >> choice;
-
-        switch (choice)
-        {
-        case 1:
-            std::cout << "Enter number: ";
-            std::cin >> num;
-            result = sqrt(num);
-            history.push_back("sqrt(" + std::to_string(num) + ") = " + std::to_string(result));
-            break;
-        case 2:
-            double power;
-            std::cout << "Enter base: ";
-            std::cin >> num;
-            std::cout << "Enter power: ";
-            std::cin >> power;
-            result = pow(num, power);
-            history.push_back(std::to_string(num) + "^" + std::to_string(power) + " = " + std::to_string(result));
-            break;
-            // Add more scientific operations as needed
-        }
-
-        std::cout << "\n═══════ Result ═══════\n";
-        std::cout << result << std::endl;
-    }
-
-    void memoryOperations()
-    {
-        std::cout << "\n┌────── Memory Operations ──────┐\n";
-        std::cout << "│ 1. Store to Memory\t     │\n";
-        std::cout << "│ 2. Recall Memory\t     │\n";
-        std::cout << "│ 3. Clear Memory\t     │\n";
-        std::cout << "└────────────────────────────┘\n";
-
-        int choice;
-        std::cin >> choice;
-
-        switch (choice)
-        {
-        case 1:
-            std::cout << "Enter number to store: ";
-            std::cin >> memory;
-            break;
-        case 2:
-            std::cout << "Memory value: " << memory << std::endl;
-            break;
-        case 3:
-            memory = 0;
-            std::cout << "Memory cleared!" << std::endl;
-            break;
-        }
-    }
-
-    void viewHistory()
-    {
-        std::cout << "\n═══════ Calculation History ═══════\n";
-        for (const auto &calc : history)
-        {
-            std::cout << calc << std::endl;
-        }
-    }
-
-    void run()
-    {
-        while (true)
-        {
-            displayMenu();
-            int choice;
-            std::cout << "Enter your choice: ";
-            std::cin >> choice;
-
-            switch (choice)
-            {
-            case 1:
-                basicOperations();
-                break;
-            case 2:
-                scientificOperations();
-                break;
-            case 3:
-                memoryOperations();
-                break;
-            case 4:
-                viewHistory();
-                break;
-            case 5:
-                std::cout << "Thank you for using Futuristic Calculator!\n";
-                return;
-            default:
-                std::cout << "Invalid choice!\n";
-            }
-        }
-    }
-};
-
-int main()
-{
-    FuturisticCalculator calc;
-    calc.run();
-    return 0;
+    currentNumber = QString::number(result);
+    updateDisplay();
+    addToHistory(QString::number(currentNum) + " = " + currentNumber);
 }
+
+void CalculatorGUI::clearPressed()
+{
+    currentNumber = "0";
+    storedNumber = 0;
+    pendingOperator = "";
+    updateDisplay();
+}
+
+void CalculatorGUI::scientificPressed()
+{
+    QPushButton *button = qobject_cast<QPushButton *>(sender());
+    if (!button) return;
+
+    double num = currentNumber.toDouble();
+    if (button->text() == "√") {
+        if (num >= 0) {
+            currentNumber = QString::number(std::sqrt(num));
+        } else {
+            ui->display->setText("Fehler: Negative Wurzel");
+            return;
+        }
+    } else if (button->text() == "sin") {
+        currentNumber = QString::number(std::sin(num));
+    } else if (button->text() == "^") {
+        storedNumber = num;
+        pendingOperator = "^";
+        currentNumber = "";
+        return;
+    }
+
+    updateDisplay();
+}
+
+void CalculatorGUI::decimalPressed()
+{
+    if (!currentNumber.contains('.')) {
+        currentNumber += '.';
+        updateDisplay();
+    }
+}
+
+void CalculatorGUI::memoryPressed()
+{
+    QPushButton *button = qobject_cast<QPushButton *>(sender());
+    if (!button) return;
+
+    if (button->text() == "M+") {
+        memory += currentNumber.toDouble();
+    } else if (button->text() == "M-") {
+        memory -= currentNumber.toDouble();
+    } else if (button->text() == "MR") {
+        currentNumber = QString::number(memory);
+        updateDisplay();
+    } else if (button->text() == "MC") {
+        memory = 0;
+    }
+}
+
+void CalculatorGUI::updateDisplay()
+{
+    ui->display->setText(currentNumber);
+}
+
+void CalculatorGUI::addToHistory(const QString &operation)
+{
+    history.append(operation);
+}
+
+void CalculatorGUI::toggleTheme()
+{
+    isDarkMode = !isDarkMode;
+    applyTheme();
+}
+
+void CalculatorGUI::setupThemeButton()
+{
+    QPushButton *themeButton = new QPushButton("Theme wechseln", this);
+    connect(themeButton, &QPushButton::clicked, this, &CalculatorGUI::toggleTheme);
+    ui->buttonLayout->addWidget(themeButton);
+}
+
+void CalculatorGUI::setupVoiceRecognition()
+{
+    voiceButton = new QPushButton("🎤", this);
+    voiceButton->setFixedSize(50, 50);
+    voiceButton->setStyleSheet("border-radius: 25px; background-color: #4CAF50; color: white;");
+    ui->buttonLayout->addWidget(voiceButton);
+
+    speechRecognizer = new QSpeechRecognizer(this);
+
+    // Setze die Sprache auf Deutsch
+    QLocale germanLocale(QLocale::German);
+    speechRecognizer->setLocale(germanLocale);
+
+    connect(voiceButton, &QPushButton::clicked, this, &CalculatorGUI::startVoiceRecognition);
+    connect(speechRecognizer, &QSpeechRecognizer::speechRecognized,
+            this, &CalculatorGUI::handleSpeechResult);
+}
+
+void CalculatorGUI::startVoiceRecognition()
+{
+    voiceButton->setStyleSheet("border-radius: 25px; background-color: #FF5252; color: white;");
+    speechRecognizer->startListening();
+}
+
+void CalculatorGUI::handleSpeechResult(const QString& text)
+{
+    voiceButton->setStyleSheet("border-radius: 25px; background-color: #4CAF50; color: white;");
+    processVoiceCommand(text.toLower());
+}
+
+void CalculatorGUI::processVoiceCommand(const QString& command)
+{
+    QRegularExpression numberRegex("\\d+");
+    QRegularExpressionMatchIterator i = numberRegex.globalMatch(command);
+    QVector<double> numbers;
+
+    while (i.hasNext()) {
+        QRegularExpressionMatch match = i.next();
+        numbers.append(match.captured().toDouble());
+    }
+
+    if (numbers.size() < 2) {
+        ui->display->setText("Fehler: Zwei Zahlen erforderlich");
+        return;
+    }
+
+    double result = 0;
+    if (command.contains("plus") || command.contains("addiere")) {
+        result = numbers[0] + numbers[1];
+        currentNumber = QString::number(result);
+    }
+    else if (command.contains("minus") || command.contains("subtrahiere")) {
+        result = numbers[0] - numbers[1];
+        currentNumber = QString::number(result);
+    }
+    else if (command.contains("mal") || command.contains("multipliziere")) {
+        result = numbers[0] * numbers[1];
+        currentNumber = QString::number(result);
+    }
+    else if (command.contains("geteilt") || command.contains("dividiere")) {
+        if (numbers[1] != 0) {
+            result = numbers[0] / numbers[1];
+            currentNumber = QString::number(result);
+        } else {
+            ui->display->setText("Fehler: Division durch Null");
+            return;
+        }
+    }
+    else if (command.contains("lösche") || command.contains("zurücksetzen")) {
+        clearPressed();
+        return;
+    }
+
+    updateDisplay();
+    addToHistory(QString("%1 = %2").arg(command).arg(result));
+}
+
+void CalculatorGUI::applyTheme()
+{
+    QString baseStyle = R"(
+        QPushButton {
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            min-width: 80px;
+            min-height: 60px;
+        }
+        QLineEdit {
+            border-radius: 10px;
+            padding: 10px;
+            margin: 5px;
+        }
+    )";
+
+    QString darkStyle = R"(
+        QMainWindow {
+            background-color: #1a1a1a;
+        }
+        QLineEdit {
+            background-color: #333333;
+            color: #ffffff;
+            border: 2px solid #444444;
+        }
+        QPushButton {
+            background-color: #333333;
+            color: #ffffff;
+            border: 2px solid #444444;
+        }
+        QPushButton:hover {
+            background-color: #444444;
+        }
+        QPushButton[type="operator"] {
+            background-color: #FF9800;
+            color: white;
+        }
+        QPushButton[type="number"] {
+            background-color: #424242;
+        }
+        QPushButton[type="function"] {
+            background-color: #2196F3;
+            color: white;
+        }
+    )";
+
+    QString lightStyle = R"(
+        QMainWindow {
+            background-color: #f5f5f5;
+        }
+        QLineEdit {
+            background-color: white;
+            color: #333333;
+            border: 2px solid #e0e0e0;
+        }
+        QPushButton {
+            background-color: white;
+            color: #333333;
+            border: 2px solid #e0e0e0;
+        }
+        QPushButton:hover {
+            background-color: #f0f0f0;
+        }
+        QPushButton[type="operator"] {
+            background-color: #2196F3;
+            color: white;
+        }
+        QPushButton[type="number"] {
+            background-color: white;
+        }
+        QPushButton[type="function"] {
+            background-color: #4CAF50;
+            color: white;
+        }
+    )";
+
+    setStyleSheet(baseStyle + (isDarkMode ? darkStyle : lightStyle));
+}}

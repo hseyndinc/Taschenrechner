@@ -11,12 +11,43 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Futuristic Calculator</string>
+   <string>Taschenrechner</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QLineEdit" name="display"/>
+     <widget class="QLineEdit" name="expressionDisplay">
+      <property name="minimumHeight">
+       <number>40</number>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="display">
+      <property name="minimumHeight">
+       <number>60</number>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>24</pointsize>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignVCenter</set>
+      </property>
+     </widget>
     </item>
     <item>
      <layout class="QGridLayout" name="gridLayout">
