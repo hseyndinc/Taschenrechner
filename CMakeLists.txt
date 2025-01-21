@@ -7,8 +7,8 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# Qt6 Pfad
-set(CMAKE_PREFIX_PATH "/Users/hseyndinc/Qt/6.7.3/macos")
+# Qt6 Pfad für macOS mit Homebrew
+set(CMAKE_PREFIX_PATH "/opt/homebrew/opt/qt")
 
 # Finde die benötigten Qt Pakete
 find_package(Qt6 COMPONENTS
